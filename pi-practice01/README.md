@@ -23,9 +23,9 @@ PowerShell执行安装脚本，新建`pi‑test`目录，执行`pi`启动。终�
 > 说明：模型切换前为 deepseek-v4-pro，切换后为 deepseek-flash；思考级别由 off 调整为 low。低复杂度任务可选用 flash 模型、低思考级别，响应更快、开销更小；高复杂度推理任务适合 pro 模型并调高思考级别，结果更严谨，但耗时与 token 消耗会增加。
 
 第一张：切换模型为deepseek‑flash
-![S3‑1](images/S3‑1.png)
+![S3‑1](images/S3-1.png)
 第二张：调整思考级别为low
-![S3‑2](images/S3‑2.png)
+![S3‑2](images/S3-2.png)
 
 ### 任务四：@引用代码文件 + 图片测试
 #### 4.1 引用代码文件（S4）
@@ -36,9 +36,9 @@ pi‑test下创建`hello.py`，使用`@hello.py`引用文件，要求解释代�
 准备蓝色方块带数字7的测试图片，粘贴到输入框，让AI描述图片。
 
 第一张：原始测试图片
-![S5‑1](images/S5‑1.png)
+![S5‑1](images/S5-1.png)
 第二张：模型识别图片后的回答
-![S5‑2](images/S5‑2.png)
+![S5‑2](images/S5-2.png)
 
 ### 任务五：安装并试用插件（S6）
 选用插件`pi‑web‑access`，执行`pi install npm:pi‑web‑access -l --approve`。重启pi，在Extensions看到插件已加载。
