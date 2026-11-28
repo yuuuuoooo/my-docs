@@ -1,0 +1,53 @@
+%% Pi Agent 模块层级与直接依赖关系
+%% 箭头方向：使用方 --> 被依赖方
+%% 实线 = package.json dependencies 中声明且源码存在 import 的运行时依赖
+%% 虚线 = devDependencies，不参与 npm run build 链
+
+flowchart LR
+  subgraph L0["L0 基础层：不依赖其他内部包"]
+    direction TB
+    telemetry["telemetry<br/>pi-telemetry"]
+    schema["schema<br/>pi-schema"]
+    tui["tui<br/>pi-tui"]
+    codemode["codemode<br/>pi-codemode"]
+    mcp["mcp<br/>pi-mcp"]
+  end
+
+  subgraph L1["L1 模型与协作框架层"]
+    direction TB
+    ai["ai<br/>pi-ai"]
+    chord["chord<br/>chord"]
+  end
+
+  subgraph L2["L2 核心运行时层"]
+    direction TB
+    agent_core["agent<br/>pi-agent-core"]
+    durable["durable<br/>pi-durable"]
+  end
+
+  subgraph L3["L3 集成与执行层"]
+    direction TB
+    env["env<br/>pi-env"]
+    coding_agent["coding-agent<br/>pi-coding-agent"]
+  end
+
+  coding_agent --> agent_core & ai & codemode & mcp & tui
+  env --> durable & chord
+  agent_core --> ai & schema
+  durable --> chord & ai & codemode & schema & telemetry
+  chord --> schema & telemetry
+  ai --> schema & telemetry
+
+  evals["evals<br/>pi-evals (dev)"] -.->|devDependencies| ai & coding_agent
+
+  classDef base fill:#dbeafe,stroke:#2563eb,color:#111827
+  classDef frame fill:#dcfce7,stroke:#16a34a,color:#111827
+  classDef runtime fill:#fef3c7,stroke:#d97706,color:#111827
+  classDef integrated fill:#fce7f3,stroke:#db2777,color:#111827
+  classDef dev fill:#f3f4f6,stroke:#9ca3af,stroke-dasharray:4 4,color:#374151
+
+  class telemetry,schema,tui,codemode,mcp base
+  class ai,chord frame
+  class agent_core,durable runtime
+  class env,coding_agent integrated
+  class evals dev
