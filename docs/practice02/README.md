@@ -1,8 +1,10 @@
 # 实践课2：组织建仓与源码分析
 
-姓名：顾翎妤
+| 项目 | 内容 |
+| --- | --- |
+| 姓名 | 顾翎妤 |
 | 小组代码仓库 | <https://github.com/SoftwareGrp28/pi-hunnu-2026> |
-| 个人作业仓库 | <https://yuuuuoooo.github.io/my‑docs/practice02/> |
+| 个人作业仓库 | <https://yuuuuoooo.github.io/my-docs/practice02/> |
 
 > 说明：下文所有路径均相对于仓库根目录 `pi-hunnu-2026/`；命令输出与截图取自本人机器（Windows 11 + Git Bash，仓库位于 `D:\my-docs\pi-hunnu-2026`）。
 
@@ -65,6 +67,30 @@ https://github.com/SoftwareGrp28/pi-hunnu-2026.git
 
 > 与作业表格的差异：本人版本中 `packages/` 下共 12 个目录，除上述 11 个外还有 `evals`。`evals` 只声明了 `devDependencies`（`pi-ai`、`pi-coding-agent` 等），不参与根 `npm run build`，因此不进入主依赖图，只在图中以虚线标出。其余 11 个模块与作业表格一致，无增删。
 
+### 2.2 构建顺序
+
+根 `package.json` 的 `build` 脚本把 11 个包串成一条固定的链，按下表逐个执行：
+
+```text
+telemetry → schema → chord → tui → codemode → mcp → ai → durable → env → agent → coding-agent
+```
+
+| 步骤 | 模块 | 层级 | 该步之前必须已构建的内部包 |
+| --- | --- | --- | --- |
+| 1 | telemetry | L0 | 无 |
+| 2 | schema | L0 | 无 |
+| 3 | chord | L1 | schema、telemetry |
+| 4 | tui | L0 | 无 |
+| 5 | codemode | L0 | 无 |
+| 6 | mcp | L0 | 无 |
+| 7 | ai | L1 | schema、telemetry |
+| 8 | durable | L2 | chord、ai、codemode、schema、telemetry |
+| 9 | env | L3 | chord、durable |
+| 10 | agent | L2 | ai、schema |
+| 11 | coding-agent | L3 | agent、ai、codemode、mcp、tui |
+
+顺序并不是按目录名排序，而是**人工维护的拓扑序**：下游包的 `tsconfig.build.json` 用 `paths` 指向 `../<pkg>/dist/*.d.ts`，上游没先产出声明文件，下游 `tsc` 就会报找不到模块。仓库没有使用 TypeScript project references，所以这条脚本是唯一的顺序保证。
+
 ## 三、模块层级与依赖关系
 
 ### 3.1 依赖关系图
@@ -123,7 +149,7 @@ flowchart LR
 
 **根目录**只读取根 `package.json` 的 `scripts.build`。它本身不编译任何代码，做的是“按固定顺序 `cd` 进 11 个包并逐个调用 `npm run build`”，任一包失败即整体失败。共享的 `node_modules` 由 npm workspaces 在安装阶段准备好。
 
-**子模块**读取本包 `package.json` 的 `scripts.build` 和 `tsconfig.build.json`，执行 `tsc` 把 `src/` 编译到 `dist/`，同时产出 `.d.ts` 供下游解析。`ai` 额外做模型目录代码生成与数据复制，`coding-agent` 额外做 esbuild 单文件打包，`env` 的 Rust daemon 与 `tui` 的原生模块都不在这条 npm 构建链里。根目录的 `tsconfig.json`只服务于 `tsc --noEmit` 类型检查，与 `npm run build` 无关。
+**子模块**读取本包 `package.json` 的 `scripts.build` 和 `tsconfig.build.json`，执行 `tsc` 把 `src/` 编译到 `dist/`，同时产出 `.d.ts` 供下游解析。`ai` 额外做模型目录代码生成与数据复制，`coding-agent` 额外做 esbuild 单文件打包，`env` 的 Rust daemon 与 `tui` 的原生模块都不在这条 npm 构建链里。根目录的 `tsconfig.json` 只服务于 `tsc --noEmit` 类型检查，与 `npm run build` 无关。
 
 ### 4.2 构建顺序和模块依赖有什么关系？相邻构建的模块是否一定互相依赖？
 
